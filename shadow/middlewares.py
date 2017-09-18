@@ -10,9 +10,10 @@ import requests
 import json
 
 from scrapy import signals
+from scrapy import exceptions
 
 from fake_useragent import UserAgent
-from shadow.spiders.douban import DoubanSpider 
+from shadow.spiders.douban import DoubanSpider
 
 
 class ShadowSpiderMiddleware(object):
@@ -61,20 +62,16 @@ class ShadowSpiderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
-        
+
 
 class RequestProxy(object):
 
     def __init__(self):
         pass
-        # with open('/Users/orange/Dropbox/code/houduan/scrapy/proxyspider/proxy_list.txt') as f:
-        #     self.proxy_list = [ip.split(' ')[0].strip() for ip in f]
 
     def process_request(self, request, spider):
-        pass
-        # r = requests.get('http://127.0.0.1:8000/?types=0&count=5&country=国内')
-        # ip_ports = json.loads(r.text)
-        # ip_ports = random.choice(ip_ports)
-        # proxy = random.choice(self.proxy_list)
-        # request.meta['proxy'] = 'http://' + proxy
-        # print(request.meta['proxy'])
+        url = request.url
+        if url in spider.seed:
+            print('%s in seed : %s' % (url, url in spider.seed))
+            raise exceptions.IgnoreRequest
+        spider.seed.add(url)

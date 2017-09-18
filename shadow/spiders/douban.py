@@ -11,8 +11,8 @@ from scrapy.linkextractors import LinkExtractor
 
 from shadow.items import MovieItem
 
-
 from fake_useragent import UserAgent
+from pybloom import BloomFilter
 
 
 class DoubanSpider(CrawlSpider):
@@ -20,14 +20,14 @@ class DoubanSpider(CrawlSpider):
     user_agent = UserAgent().random
     allowed_domains = ['movie.douban.com']
     start_urls = ['https://movie.douban.com']
+    seed = BloomFilter(capacity=10*1024*1024, error_rate=0.001)
     rules = (
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/[^cinema.*]')), callback='parse_item'),
     )
 
-    
     def extract_info(self, response, xpath):
         data = response.xpath(xpath).extract()
         if not data:
@@ -60,7 +60,6 @@ class DoubanSpider(CrawlSpider):
 
     def parse_item(self, response):
         url = response.url
-        print('url ==== ', url)
         try:
             movie = MovieItem()
             self.get_name(movie, response)
@@ -73,4 +72,3 @@ class DoubanSpider(CrawlSpider):
         except Exception as e:
             print('err === ', e)
             pass
-        break
