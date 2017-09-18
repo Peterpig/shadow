@@ -18,13 +18,17 @@ from pybloom import BloomFilter
 class DoubanSpider(CrawlSpider):
     name = 'douban'
     user_agent = UserAgent().random
-    allowed_domains = ['movie.douban.com']
+    allowed_domains = [
+        'movie.douban.com',
+    ]
     start_urls = ['https://movie.douban.com']
     seed = BloomFilter(capacity=10*1024*1024, error_rate=0.001)
     rules = (
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/[^cinema.*]')), callback='parse_item'),
     )
 
@@ -51,6 +55,11 @@ class DoubanSpider(CrawlSpider):
         data = self.extract_info(response, xpath)
         if data:
             item['img_url'] = data
+        else:
+            xpath = '//div[@class="subject-img"]/a/img/@src'
+            data = self.extract_info(response, xpath)
+            if data:
+                item['img_url'] = data
 
     def get_run_time(self, item, response):
         xpath = '//div[@id="info"]/span[@property="v:runtime"]/text()'
