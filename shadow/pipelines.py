@@ -9,8 +9,9 @@ import pymongo
 
 class MongoPipline(object):
 
-    def __init__(self, mongo_uri, mongo_db):
+    def __init__(self, mongo_uri, mongo_port, mongo_db):
         self.mongo_uri = mongo_uri
+        self.mongo_port = mongo_port
         self.mongo_db = mongo_db
         print(self.mongo_uri, self.mongo_db)
 
@@ -18,11 +19,12 @@ class MongoPipline(object):
     def from_crawler(cls, crawler):
         return cls(
             mongo_uri=crawler.settings.get('MONGO_URI'),
-            mongo_db=crawler.settings.get('MONGO_DATABASE', 'items')
+            mongo_port=crawler.settings.get('mongo_port', 27017),
+            mongo_db=crawler.settings.get('MONGO_DATABASE', 'items'),
         )
 
     def open_spider(self, spider):
-        self.client = pymongo.MongoClient(self.mongo_uri)
+        self.client = pymongo.MongoClient(host=self.mongo_uri,port=self.mongo_port)
         self.db = self.client[self.mongo_db]
         # 给spider设置唯一索引
         collection_name = spider.__class__.__name__.lower()

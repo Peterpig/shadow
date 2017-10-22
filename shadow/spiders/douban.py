@@ -27,9 +27,10 @@ class DoubanSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/[^cinema.*]')), callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), callback='parse_url_for_rank'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/$')), callback='parse_item'),
     )
 
     def extract_info(self, response, xpath):
@@ -45,7 +46,7 @@ class DoubanSpider(CrawlSpider):
             item['id'] = id
 
     def get_name(self, item, response):
-        xpath = '//title/text()'
+        xpath = '//div[@id="content"]/h1/span[1]/text()'
         data = self.extract_info(response, xpath)
         if data:
             item['name'] = data.replace('(豆瓣)', '')
@@ -66,6 +67,17 @@ class DoubanSpider(CrawlSpider):
         data = self.extract_info(response, xpath)
         if data:
             item['run_time'] = data
+
+    def parse_url_for_review(self, response):
+        xpath = '//div[@class="subject-img"]/a/@href'
+        url = self.extract_info(response, xpath)
+        if url and url not in self.seed:
+            self.seed.add(url)
+            yield scrapy.Request(url, callback=self.parse_item)
+
+    def parse_url_for_rank(self, response):
+        pass
+        'ajax 加载 需要动态来取数据'
 
     def parse_item(self, response):
         url = response.url
