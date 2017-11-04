@@ -29,8 +29,8 @@ class DoubanSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), callback='parse_url_for_rank'),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/$')), callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), follow=True, callback='parse_url_for_rank'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/$')), follow=True, callback='parse_item'),
     )
 
     def extract_info(self, response, xpath):
@@ -72,12 +72,14 @@ class DoubanSpider(CrawlSpider):
         xpath = '//div[@class="subject-img"]/a/@href'
         url = self.extract_info(response, xpath)
         if url and url not in self.seed:
-            self.seed.add(url)
             yield scrapy.Request(url, callback=self.parse_item)
 
     def parse_url_for_rank(self, response):
-        pass
-        'ajax 加载 需要动态来取数据'
+        xpath = '//div[@class="movie-content"]/a/@href'
+        urls = response.xpath(xpath).extract()
+        for url in urls:
+            print('url === ', url)
+            yield scrapy.Request(url, callback=self.parse_item)
 
     def parse_item(self, response):
         url = response.url

@@ -7,13 +7,19 @@
 
 import random
 import requests
+import time
 import json
 
 from scrapy import signals
 from scrapy import exceptions
+from scrapy.http import HtmlResponse
 
 from fake_useragent import UserAgent
 from shadow.spiders.douban import DoubanSpider
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class ShadowSpiderMiddleware(object):
@@ -67,7 +73,8 @@ class ShadowSpiderMiddleware(object):
 class RequestProxy(object):
 
     def __init__(self):
-        pass
+        self.driver = webdriver.PhantomJS('/Users/orange/driver/phantomjs')
+        # self.driver = webdriver.Chrome('/Users/orange/driver/chromedriver')
 
     def process_request(self, request, spider):
         url = request.url
@@ -75,3 +82,19 @@ class RequestProxy(object):
             print('%s in seed : %s' % (url, url in spider.seed))
             raise exceptions.IgnoreRequest
         spider.seed.add(url)
+
+        js = "var q = document.documentElement.scrollTop={num};"   # 滑动到页面最底部
+        if url.startswith('https://movie.douban.com/typerank'):
+            self.driver.get(url)
+            wait = WebDriverWait(self.driver, 10)
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "movie-list-item")))
+
+            # 由于是下拉加载，暂时不知道多少页，所以只加载30次
+            i = 0
+            while i <= 30:
+                self.driver.execute_script(js.format(num=i*10000))
+                time.sleep(1)
+                i += 1
+
+            body = self.driver.page_source
+            return HtmlResponse(self.driver.current_url, body=body, encoding='utf-8', request=request)
