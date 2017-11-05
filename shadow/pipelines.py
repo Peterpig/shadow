@@ -3,9 +3,10 @@
 # Define your item pipelines here
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+# See: http://doc.scrapy.org/en/latesMongoPiplinet/topics/item-pipeline.html
 
 import pymongo
+from scrapy.exceptions import DropItem
 
 class MongoPipline(object):
 
@@ -13,7 +14,6 @@ class MongoPipline(object):
         self.mongo_uri = mongo_uri
         self.mongo_port = mongo_port
         self.mongo_db = mongo_db
-        print(self.mongo_uri, self.mongo_db)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -35,6 +35,9 @@ class MongoPipline(object):
 
     def process_item(self, item, spider):
         collection_name = spider.__class__.__name__.lower()
+        if spider.name == 'douban':
+            if not (item.get('id') and item.get('name') and item.get('img_url')):
+                raise DropItem("Missing some info " % item)
         try:
             self.db[collection_name].insert(dict(item))
         except:

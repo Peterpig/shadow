@@ -23,10 +23,29 @@ class DoubanSpider(CrawlSpider):
     ]
     start_urls = ['https://movie.douban.com']
     seed = BloomFilter(capacity=10*1024*1024, error_rate=0.001)
+    re_dict = {
+            r'^https://movie.douban.com/typerank': {
+                'class_name': 'movie-list-item',
+                'exec_js': "var q = document.documentElement.scrollTop={num};",
+                'need_page_num': True,
+            },
+            r'^https://movie.douban.com/tag/$': {
+                'class_name': 'item',
+                'exec_js': "document.getElementsByClassName('more')[0].click()",
+                'need_page_num': False,
+            },
+            r'^https://movie.douban.com/explore': {
+                'class_name': 'item',
+                'exec_js': "if($('.more').text() == '加载更多'){$('.more').click()}",
+                'need_page_num': False,
+            },
+        }
+
     rules = (
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*')), follow=True, callback='parse_url_for_tag'),
+        Rule(LinkExtractor(allow=(r'httsp://movie.douban.com/tag/*')), follow=True, callback='parse_url_for_tag'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), follow=True, callback='parse_url_for_rank'),
@@ -78,7 +97,14 @@ class DoubanSpider(CrawlSpider):
         xpath = '//div[@class="movie-content"]/a/@href'
         urls = response.xpath(xpath).extract()
         for url in urls:
-            print('url === ', url)
+            print('url === %s' % url)
+            yield scrapy.Request(url, callback=self.parse_item)
+
+    def parse_url_for_tag(self, response):
+        xpath = '//div[@class="list-wp"]//a/@href'
+        urls = response.xpath(xpath).extract()
+        for url in urls:
+            print('url === %s' % url)
             yield scrapy.Request(url, callback=self.parse_item)
 
     def parse_item(self, response):

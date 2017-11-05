@@ -5,6 +5,7 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+import re
 import random
 import requests
 import time
@@ -83,16 +84,27 @@ class RequestProxy(object):
             raise exceptions.IgnoreRequest
         spider.seed.add(url)
 
-        js = "var q = document.documentElement.scrollTop={num};"   # 滑动到页面最底部
-        if url.startswith('https://movie.douban.com/typerank'):
+        action_dict = {}
+        if not spider.re_dict:
+            return
+        for pattern, value_dict in spider.re_dict.items():
+            if re.match(pattern, url):
+                action_dict = value_dict
+                break
+
+        if action_dict.get('class_name'):
             self.driver.get(url)
             wait = WebDriverWait(self.driver, 10)
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "movie-list-item")))
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, action_dict['class_name'])))
 
             # 由于是下拉加载，暂时不知道多少页，所以只加载30次
             i = 0
+            exec_js = action_dict.get('exec_js')
             while i <= 30:
-                self.driver.execute_script(js.format(num=i*10000))
+                if action_dict.get('need_page_num'):
+                    self.driver.execute_script(exec_js.format(num=i*10000))
+                else:
+                    self.driver.execute_script(exec_js)
                 time.sleep(1)
                 i += 1
 
