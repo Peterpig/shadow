@@ -74,8 +74,10 @@ class ShadowSpiderMiddleware(object):
 class RequestProxy(object):
 
     def __init__(self):
-        self.driver = webdriver.PhantomJS('/Users/orange/driver/phantomjs')
-        # self.driver = webdriver.Chrome('/Users/orange/driver/chromedriver')
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
+        self.driver = webdriver.Chrome(chrome_options=chrome_options)
 
     def process_request(self, request, spider):
         url = request.url
