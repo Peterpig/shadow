@@ -20,7 +20,6 @@ class DoubanSpider(CrawlSpider):
     user_agent = UserAgent().random
     allowed_domains = [
         'movie.douban.com',
-        'www.douban.com',
     ]
     start_urls = ['https://movie.douban.com']
     seed = BloomFilter(capacity=10*1024*1024, error_rate=0.001)
@@ -43,14 +42,12 @@ class DoubanSpider(CrawlSpider):
         }
 
     rules = (
-        Rule(LinkExtractor(deny=(r'https://www.douban.com/accounts*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*')), follow=True, callback='parse_url_for_tag'),
         Rule(LinkExtractor(allow=(r'httsp://movie.douban.com/tag/*')), follow=True, callback='parse_url_for_tag'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
-        Rule(LinkExtractor(allow=(r'https://www.douban.com/doulist/\d+/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/cinema/\w+/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), follow=True, callback='parse_url_for_rank'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/$')), follow=True, callback='parse_item'),
