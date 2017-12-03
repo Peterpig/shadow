@@ -43,6 +43,7 @@ class DoubanSpider(CrawlSpider):
         }
 
     rules = (
+        Rule(LinkExtractor(deny=(r'https://www.douban.com/accounts*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/chart.*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/explore.*')), follow=True, callback='parse_url_for_tag'),
