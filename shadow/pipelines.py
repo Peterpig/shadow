@@ -28,7 +28,7 @@ class MongoPipline(object):
         self.db = self.client[self.mongo_db]
         # 给spider设置唯一索引
         collection_name = spider.__class__.__name__.lower()
-        self.db[collection_name].ensure_index('id', unique=True)
+        self.db[collection_name].create_index('id', unique=True)
 
     def close_spider(self, spider):
         self.client.close()
@@ -39,7 +39,7 @@ class MongoPipline(object):
             if not (item.get('id') and item.get('name') and item.get('img_url')):
                 raise DropItem("Missing some info " % item)
         try:
-            self.db[collection_name].insert(dict(item))
+            self.db[collection_name].insert_one(dict(item))
         except:
             pass
         return item
