@@ -48,9 +48,12 @@ class DoubanSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'httsp://movie.douban.com/tag/*')), follow=True, callback='parse_url_for_tag'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/cinema/\w+/'))),
+        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/tv/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), follow=True, callback='parse_url_for_rank'),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/$')), follow=True, callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+$')), follow=True, callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/celebrity*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/awards*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/cinema/\w+/'))),
     )
 
     def extract_info(self, response, xpath):
@@ -59,17 +62,21 @@ class DoubanSpider(CrawlSpider):
             return ''
         data = data[0].strip()
         return data
+    
+    def extrace_info_list(self, response, xpath):
+        data = response.xpath(xpath)
+        if not data:
+            return ''
+        return [d.extract().strip() for d in data]
 
     def get_id(self, item, url):
-        id = re.match('.*/subject/(.*)/', url).group(1)
-        if id:
-            item['id'] = id
+        douban_id = re.match('.*/subject/(.*)/', url).group(1)
+        item['id'] = douban_id
 
     def get_name(self, item, response):
         xpath = '//div[@id="content"]/h1/span[1]/text()'
         data = self.extract_info(response, xpath)
-        if data:
-            item['name'] = data.replace('(豆瓣)', '')
+        item['name'] = data.replace('(豆瓣)', '')
 
     def get_img_url(self, item, response):
         xpath = '//div[@id="mainpic"]/a/img/@src'
@@ -79,14 +86,22 @@ class DoubanSpider(CrawlSpider):
         else:
             xpath = '//div[@class="subject-img"]/a/img/@src'
             data = self.extract_info(response, xpath)
-            if data:
-                item['img_url'] = data
+            item['img_url'] = data
 
     def get_run_time(self, item, response):
         xpath = '//div[@id="info"]/span[@property="v:runtime"]/text()'
         data = self.extract_info(response, xpath)
-        if data:
-            item['run_time'] = data
+        item['run_time'] = data
+
+    def get_genre(self, item, response):
+        xpath = '//div[@id="info"]/span[@property="v:genre"]/text()'
+        data = response.xpath(xpath)
+        item['genre'] = [d.extract().strip() for d in data]
+    
+    def get_release_date(self, item, response):
+        xpath = '//div[@id="info"]/span[@property="v:initialReleaseDate"]/text()'
+        data = self.extrace_info_list(response, xpath)
+        item['release_date'] = data
 
     def parse_url_for_review(self, response):
         xpath = '//div[@class="subject-img"]/a/@href'
@@ -98,14 +113,12 @@ class DoubanSpider(CrawlSpider):
         xpath = '//div[@class="movie-content"]/a/@href'
         urls = response.xpath(xpath).extract()
         for url in urls:
-            print('url === %s' % url)
             yield scrapy.Request(url, callback=self.parse_item)
 
     def parse_url_for_tag(self, response):
         xpath = '//div[@class="list-wp"]//a/@href'
         urls = response.xpath(xpath).extract()
         for url in urls:
-            print('url === %s' % url)
             yield scrapy.Request(url, callback=self.parse_item)
 
     def parse_item(self, response):
