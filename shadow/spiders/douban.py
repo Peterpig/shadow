@@ -129,6 +129,8 @@ class DoubanSpider(CrawlSpider):
             self.get_img_url(movie, response)
             self.get_run_time(movie, response)
             self.get_id(movie, url)
+            self.get_genre(movie, url)
+            self.get_release_date(movie, url)
             movie['url'] = url
             movie['add_time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             yield movie
