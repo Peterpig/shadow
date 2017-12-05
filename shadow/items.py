@@ -16,4 +16,6 @@ class MovieItem(scrapy.Item):
     img_url = scrapy.Field()
     run_time = scrapy.Field()
     add_time = scrapy.Field()
+    genre = scrapy.Field()
+    release_date = scrapy.Field()
     
