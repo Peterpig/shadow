@@ -74,6 +74,7 @@ class ShadowSpiderMiddleware(object):
 class RequestPorxy(object):
 
     def __init__(self):
+        pass
 
     def process_request(self, request, spider):
         proxy_status = False
