@@ -84,12 +84,13 @@ class RequestPorxy(object):
             ip = ip_str[0]
             port = ip_str[1]
             proxies={
-                'http':'http://%s:%s' % (ip,port),
-                'https':'http://%s:%s' % (ip,port),
+                'http':'http://%s:%s' % (ip, port),
+                'https':'http://%s:%s' % (ip, port),
             }
             r = requests.get('http://ip.chinaz.com/', proxies=proxies)
             if r.status_code == 200:
-                request.meta["proxy"] = 'http://%s:%s' % (ip,port)
+                request.meta["proxy"] = 'http://%s:%s' % (ip, port)
+                print('use proxy ==== %s: %s' % (ip, port))
                 break
 
 class RequestMethodMiddle(object):
