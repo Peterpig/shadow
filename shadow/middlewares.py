@@ -99,15 +99,14 @@ class RequestProxy(object):
             wait = WebDriverWait(self.driver, 10)
             wait.until(EC.presence_of_element_located((By.CLASS_NAME, action_dict['class_name'])))
 
-            # 由于是下拉加载，暂时不知道多少页，所以只加载100次
             i = 0
             exec_js = action_dict.get('exec_js')
-            while i <= 100:
+            while i <= 60:
                 if action_dict.get('need_page_num'):
                     self.driver.execute_script(exec_js.format(num=i*10000))
                 else:
                     self.driver.execute_script(exec_js)
-                time.sleep(1)
+                time.sleep(1.5)
                 i += 1
 
             body = self.driver.page_source
