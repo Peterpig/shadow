@@ -48,10 +48,9 @@ class DoubanSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'httsp://movie.douban.com/tag/*')), follow=True, callback='parse_url_for_tag'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/review/.*/')), callback='parse_url_for_review'),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/note/\d+/'))),
-        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/tv/'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/typerank')), follow=True, callback='parse_url_for_rank'),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+$')), follow=True, callback='parse_item'),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/celebrity*'))),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/*')), follow=True, callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'https://movie.douban.com/celebrity/\d+/$'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/awards*'))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/cinema/\w+/'))),
     )
