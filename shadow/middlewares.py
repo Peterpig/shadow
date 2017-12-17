@@ -106,7 +106,7 @@ class RequestMethodMiddle(object):
                     self.driver.execute_script(exec_js.format(num=i*10000))
                 else:
                     self.driver.execute_script(exec_js)
-                time.sleep(3)
+                time.sleep(4)
                 i += 1
 
             body = self.driver.page_source
